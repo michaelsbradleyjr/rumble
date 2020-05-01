@@ -1,6 +1,8 @@
-(ns rumble.core)
+(ns rumble.core
+  (:gen-class)
+  (:require [rumble.kludge :as kludge]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(defn -main [& args]
+  ;; eventually this should mount the cljfx renderer for the opening screen of
+  ;; the desktop app
+  )
