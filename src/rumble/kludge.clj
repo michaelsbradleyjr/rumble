@@ -1,8 +1,8 @@
 (ns rumble.kludge
   (:require [clojure.data.json :as json]
             [clojure.java.io :refer [make-parents]]
-            [rumble.ethereum.rpc :as eth-rpc]
-            [rumble.ethereum.util :as eth-util]
+            [rumble.ethereum.rpc :as eth.rpc]
+            [rumble.ethereum.util :as eth.util]
             [rumble.native.status-go :as status-go]
             [rumble.util :as util :refer [path-join]]))
 
