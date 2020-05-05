@@ -7,7 +7,7 @@
 ;; maybe switch to bigint at some point, but remember to stringify for :id
 (def ^:private id (atom 0))
 
-;; for call-rpc vs. call-private-rpc could use multimethods approach to
+;; for call vs. call-private could use multimethods approach to
 ;; distinguish on the method
 
 ;; need helpers to transform numbers to hex, etc., might be able to use spec to
@@ -15,13 +15,13 @@
 
 (def base-req ^:private {:jsonrpc "2.0" :params []})
 
-(defn call-rpc [request]
+(defn call [request]
   (let [request (merge base-req {:id (swap! id inc)} request)
         req-json (json/write-str request)
         res-json (status-go/call-rpc req-json)]
     (json/read-str res-json)))
 
-(defn call-private-rpc [request]
+(defn call-private [request]
   (let [request (merge base-req {:id (swap! id inc)} request)
         req-json (json/write-str request)
         res-json (status-go/call-private-rpc req-json)]
@@ -29,12 +29,12 @@
 
 ;; async variants ;;
 
-(def ^:private <call-rpc* (util/asyncify call-rpc))
+(def ^:private <call* (util/asyncify call))
 
-(defn <call-rpc [request]
-  (async/take 1 (<call-rpc* request)))
+(defn <call [request]
+  (async/take 1 (<call* request)))
 
-(def ^:private <call-private-rpc* (util/asyncify call-private-rpc))
+(def ^:private <call-private* (util/asyncify call-private))
 
-(defn <call-private-rpc [request]
-  (async/take 1 (<call-private-rpc* request)))
+(defn <call-private [request]
+  (async/take 1 (<call-private* request)))
