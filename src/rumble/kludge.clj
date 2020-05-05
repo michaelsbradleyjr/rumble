@@ -13,11 +13,13 @@
 
 (def rumble-dir (path-join (System/getProperty "user.home") ".rumble"))
 
-(def no-backup-dir (path-join rumble-dir "no-backup"))
+(def no-backup-dir "no-backup")
+
+(def no-backup-dir-abs (path-join rumble-dir no-backup-dir))
 
 (def keystore-dir "keystore")
 
-(def keystore-dir-abs (path-join no-backup-dir "keystore"))
+(def keystore-dir-abs (path-join no-backup-dir-abs keystore-dir))
 
 (util/delete-recursively rumble-dir)
 
@@ -26,7 +28,7 @@
 
 (status-go/init-keystore keystore-dir-abs)
 
-(status-go/open-accounts no-backup-dir)
+(status-go/open-accounts no-backup-dir-abs)
 
 (def account-1 {:bip39Passphrase ""
                 :mnemonicPhraseLength 12
