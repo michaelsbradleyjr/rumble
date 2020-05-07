@@ -1,8 +1,6 @@
 (ns rumble.core
   (:gen-class)
-  (:require [rumble.kludge :as kludge]))
+  (:require [rumble.ui :as ui]))
 
 (defn -main [& args]
-  ;; eventually this should mount the cljfx renderer for the opening screen of
-  ;; the desktop app
-  )
+  (ui/start))

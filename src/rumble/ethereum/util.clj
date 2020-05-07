@@ -7,6 +7,10 @@
 (defn hash-message [message]
   ((json/read-str (status-go/hash-message message)) "result"))
 
+(defn set-signal-event-callback! [f]
+  (let [f* #(f (json/read-str %))]
+    (status-go/set-signal-event-callback f*)))
+
 ;; async variants ;;
 
 (def ^:private <hash-message* (util/asyncify hash-message))

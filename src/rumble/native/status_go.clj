@@ -1,5 +1,6 @@
 (ns rumble.native.status-go
-  (:import [com.sun.jna Native]))
+  (:import [com.sun.jna Native]
+           [rumble.native.status-go.signal-event-callback SignalEventCallback]))
 
 (gen-interface
  :name jna.StatusGo
@@ -12,7 +13,8 @@
   [MultiAccountGenerateAndDeriveAddresses [String] String]
   [MultiAccountStoreDerivedAccounts [String] String]
   [OpenAccounts [String] String]
-  [SaveAccountAndLogin [String String String String String] String]])
+  [SaveAccountAndLogin [String String String String String] String]
+  [SetSignalEventCallback [com.sun.jna.Callback] Void]])
 
 (defonce +StatusGo+
   (Native/loadLibrary (.toString (Native/extractFromResourcePath "status"))
@@ -47,3 +49,14 @@
                         settings-json
                         config-json
                         subaccount-data))
+
+(def ^:private signal-event-callback (atom nil))
+
+(defn set-signal-event-callback [^clojure.lang.IFn f]
+  (if-let [callback @signal-event-callback]
+    (do (reset! (.-state callback) f)
+        nil)
+    (let [callback (SignalEventCallback. f)]
+      (reset! signal-event-callback callback)
+      (.SetSignalEventCallback +StatusGo+ callback)
+      nil)))
