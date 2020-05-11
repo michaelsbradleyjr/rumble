@@ -1,7 +1,6 @@
---input target
---main-jar rumble-0.1.0-SNAPSHOT-standalone.jar
+--dest pkg
+--input input
+--java-options "-Drumble.fx-implicit-exit=true -Xms64m -Xmx512m -Xaggressive"
+--main-class rumble.Launcher
+--main-jar rumble-standalone.jar
 --name "Rumble"
---main-class clojure.main
---arguments -m
---arguments rumble.core
---java-options "-Xms256m -Xmx256m"

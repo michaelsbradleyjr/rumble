@@ -3,4 +3,4 @@
   (:require [rumble.ui :as ui]))
 
 (defn -main [& args]
-  (ui/start))
+  (ui/start!))

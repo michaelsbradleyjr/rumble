@@ -1,9 +1,8 @@
 (ns rumble.kludge
   (:require [clojure.data.json :as json]
             [clojure.java.io :refer [make-parents]]
-            [rumble.ethereum.rpc :as eth.rpc]
-            [rumble.ethereum.util :as eth.util]
-            [rumble.native.status-go :as status-go]
+            [rumble.native.status-go :as native]
+            [rumble.status-go :as status-go]
             [rumble.util :as util :refer [path-join]]))
 
 ;; get status-go up-and-running to an extent it's possible to use RPC
@@ -26,9 +25,9 @@
 ;; doesn't create a "foo" file, only ensures directory tree exists
 (make-parents (path-join keystore-dir-abs "foo"))
 
-(status-go/init-keystore keystore-dir-abs)
+(native/init-keystore! keystore-dir-abs)
 
-(status-go/open-accounts no-backup-dir-abs)
+(native/open-accounts no-backup-dir-abs)
 
 (def account-1 {:bip39Passphrase ""
                 :mnemonicPhraseLength 12
@@ -38,7 +37,7 @@
 (def account-1-json (json/write-str account-1))
 
 (def derived-addresses (json/read-str
-                        (status-go/multi-account-generate-and-derive-addresses
+                        (native/multi-account-generate-and-derive-addresses
                          account-1-json)))
 
 (def account-1-id ((first derived-addresses) "id"))
@@ -56,7 +55,7 @@
 (def account-2-json (json/write-str account-2))
 
 (def derived-accounts (json/read-str
-                       (status-go/multi-account-store-derived-accounts
+                       (native/multi-account-store-derived-accounts!
                         account-2-json)))
 
 (def photo-path "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAmElEQVR4nOzX4QmAIBBA4Yp2aY52aox2ao6mqf+SoajwON73M0J4HBy6TEEYQmMIjSE0htCECVlbDziv+/n6fuzb3OP/UmEmYgiNITRNm+LPqO2UE2YihtAYQlN818ptoZzau1btOakwEzGExhCa5hdi7d2p1zZLhZmIITSG0PhCpDGExhANEmYihtAYQmMIjSE0bwAAAP//kHQdRIWYzToAAAAASUVORK5CYII=")
@@ -177,7 +176,7 @@
                    :DataDir data-dir
                    :EnableNTPSync true
                    :KeyStoreDir keystore-dir
-                   :ListenAddr ":30304"
+                   :ListenAddr ":30305"
                    :LogEnabled true
                    :LogFile "geth.log"
                    :LogLevel "INFO"
@@ -209,10 +208,51 @@
 
 (def final-config-json (json/write-str final-config))
 
-(defn login []
+(defn login! []
   (json/read-str
-   (status-go/save-account-and-login multi-account-data-json
+   (native/save-account-and-login! multi-account-data-json
                                      password
                                      settings-json
                                      final-config-json
                                      accounts-data-json)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (ns rumble.kludge)
+
+;; (login!)
+
+;; (ns rumble.status-go)
+
+;; (def signals (atom []))
+
+;; (set-signal-event-callback! (fn [s] (swap! signals #(conj % s))))
+
+;; (native/add-peer! "enode://2c8de3cbb27a3d30cbb5b3e003bc722b126f5aef82e2052aaef032ca94e0c7ad219e533ba88c70585ebd802de206693255335b100307645ab5170e88620d2a81@47.244.221.14:443")
+
+;; (call-private {:method "wakuext_startMessenger"})
+
+;; (call-private {:method "wakuext_loadFilters"
+;;                :params [[{:ChatID "test"
+;;                           :OneToOne false}]]})
+
+;; (call-private {:method "wakuext_saveChat"
+;;                :params [{:lastClockValue 0
+;;                          :color "#51d0f0"
+;;                          :name "test"
+;;                          :lastMessage nil
+;;                          :active true
+;;                          :id "test"
+;;                          :unviewedMessagesCount 0
+;;                          :chatType 2
+;;                          :timestamp 1588940692659}]})
+
+;; ;; {"jsonrpc":"2.0","id":1,"method":"wakuext_sendChatMessage","params":[{"chatId":"test","text":"Hello from iOS simulator","responseTo":null,"ensName":null,"sticker":null,"contentType":1}]}
+
+;; (call-private {:method "wakuext_sendChatMessage"
+;;                :params [{:chatId "test"
+;;                          :text "Hello from Clojure JVM REPL"
+;;                          :responseTo nil
+;;                          :ensName nil
+;;                          :sticker nil
+;;                          :contentType 1}]})

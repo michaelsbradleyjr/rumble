@@ -12,21 +12,22 @@
     {:fx/type :stage
      :showing true
      :title "Rumble"
-     :width 800
-     :height 600
+     :width 1024
+     :height 768
      :scene {:fx/type :scene
              :root {:fx/type :v-box
                     :alignment :center
                     :children [{:fx/type :label
                                 :text "Hello world"}]}}})))
 
-;; `setImplicitExit true` results in the jvm shutting down when the app window
+;; (setImplicitExit true) results in the jvm shutting down when the app window
 ;; is closed; might be a short-term solution until the app takes on more shape
-;; (maybe can instead do an explicit exit for quit action), and don't want it
-;; when developing the app, only when doing `lein run` or running packaged app
-(defn start []
-  ;; (javafx.application.Platform/setImplicitExit true)
-  (kludge/login)
+;; (could do an explicit exit for quit action); don't want it when developing
+;; the app, only when doing `lein run` or running packaged app
+(defn start! []
+  (when (System/getProperty "rumble.fx-implicit-exit")
+    (javafx.application.Platform/setImplicitExit true))
+  ;; (kludge/login!)
   (first-ui-attempt)
   nil)
 

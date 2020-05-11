@@ -1,5 +1,5 @@
-(ns rumble.native.status-go.signal-event-callback
-  (:gen-class :name rumble.native.status-go.signal-event-callback.SignalEventCallback
+(ns rumble.native.status-go.signal
+  (:gen-class :name rumble.native.status-go.signal.SignalEventCallback
               :implements [com.sun.jna.Callback]
               :constructors {[clojure.lang.IFn] []}
               :init init

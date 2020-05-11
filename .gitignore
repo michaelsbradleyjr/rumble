@@ -9,7 +9,8 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 
-*.dmg
-resources/**/*.dll
-resources/**/*.dylib
-resources/**/*.so
+/input
+/pkg
+/resources/**/*.dll
+/resources/**/*.dylib
+/resources/**/*.so
