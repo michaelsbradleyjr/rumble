@@ -16,15 +16,13 @@
   :repl-options {:init-ns rumble.core}
   :jvm-opts ["-Drumble.fx-implicit-exit=true"
              "-Xms64m"
-             "-Xmx512m"
-             "-Xaggressive"]
+             "-Xmx512m"]
   :aot [rumble.native.status-go.signal]
   :omit-source true
   :jar-name "rumble.jar"
   :uberjar-name "rumble-standalone.jar"
   :profiles {:repl {:jvm-opts ^:replace ["-Xms64m"
-                                         "-Xmx512m"
-                                         "-Xaggressive"]}
+                                         "-Xmx512m"]}
              :uberjar {:aot :all
                        :auto-clean false
                        :injections [(javafx.application.Platform/exit)]}}

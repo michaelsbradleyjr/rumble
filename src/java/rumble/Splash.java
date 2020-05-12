@@ -29,7 +29,7 @@ public class Splash extends Application {
             CornerRadii.EMPTY,
             Insets.EMPTY);
         BackgroundImage image = new BackgroundImage(
-            new Image("/images/rumble.png", 228, 176, false, true, false),
+            new Image("/images/rumble.png", 171, 132, false, true, false),
             BackgroundRepeat.NO_REPEAT,
             BackgroundRepeat.NO_REPEAT,
             BackgroundPosition.CENTER,
