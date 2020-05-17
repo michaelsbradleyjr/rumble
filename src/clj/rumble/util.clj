@@ -3,22 +3,31 @@
   (:require [clojure.core.async :as async :refer [<! go thread]]
             [clojure.java.io :as io]))
 
-(defn asyncify
-  ([f] (asyncify f 8))
-  ([f n]
-   (if (> n 7)
-     (fn [& args] (thread (apply f args)))
-     (case n
-       0 (fn [] (thread (f)))
-       1 (fn [a] (thread (f a)))
-       2 (fn [a b] (thread (f a b)))
-       3 (fn [a b c] (thread (f a b c)))
-       4 (fn [a b c d] (thread (f a b c d)))
-       5 (fn [a b c d e] (thread (f a b c d e)))
-       6 (fn [a b c d e f] (thread (f a b c d e f)))
-       7 (fn [a b c d e f g] (thread (f a b c d e f g)))))))
+(defmacro asyncify [f & opts]
+  (let [[arity n buf-or-n] opts
+        args-sym (symbol "args")
+        copts (count opts)]
+    (if (= copts 0)
+      `(fn [& ~args-sym] (thread (apply ~f ~args-sym)))
+      (let [args (if (= arity :&)
+                   `[& ~args-sym]
+                   `[~@(for [_ (range arity)] (gensym))])
+            appl (if (= arity :&)
+                   `(apply ~f ~args-sym)
+                   `(~f ~@args))]
+        (case copts
+          1 `(fn ~args (thread ~appl))
+          2 `(fn ~args (async/take ~n (thread ~appl)))
+          3 `(fn ~args (async/take ~n (thread ~appl) ~buf-or-n)))))))
 
-;; maybe can use try/catch and impl error-first Node.js style callbacks?
+(defmacro def-asyncified-fn [name f & opts]
+  (let [body (rest (macroexpand-1 `(asyncify ~f ~@opts)))]
+    `(defn ~name ~@body)))
+
+;; maybe can use try/catch and impl error-first Node.js style callbacks? once
+;; the error-handling pattern is figured out for that purpose, have callbackify
+;; deal with arity like asyncify above (will become a macro); if callbackify
+;; ends up unused it can be dropped from this namespace
 (defn callbackify [<f]
   (fn [& args]
     (let [callback (last args)
@@ -26,14 +35,14 @@
       (go (callback (<! chan))))
     nil))
 
-(defn delete-recursively [fname]
-  (when (.exists (io/file fname))
-    (let [func (fn [func f]
-                 (when (.isDirectory f)
-                   (doseq [f2 (.listFiles f)]
-                     (func func f2)))
-                 (io/delete-file f))]
-      (func func (io/file fname)))))
+(defn delete-recursively [path]
+  (when (.exists (io/file path))
+    (let [f (fn [f path*]
+              (when (.isDirectory path*)
+                (doseq [path** (.listFiles path*)]
+                  (f f path**)))
+              (io/delete-file path*))]
+      (f f (io/file path)))))
 
 (defn path-join [p & ps]
   (str (.normalize (Paths/get p (into-array String ps)))))
