@@ -5,7 +5,7 @@
   (css/register
    ::app
    {}
-   ;; {".app-tab" {:-fx-opacity "0.5"}
+   ;; {".app-tab-graphic" {:-fx-opacity "0.5"}
    ;;  ".root" {:-fx-base :white}
    ;;  ".tab" {:-fx-background-color :white}
    ;;  ;; ".tab:selected" {}
