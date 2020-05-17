@@ -7,6 +7,7 @@
             [clojure.edn :as edn]
             [rumble.kludge :as kludge]
             [rumble.status-go :as status-go]
+            [rumble.ui.state :as state]
             [rumble.ui.styles :as styles]))
 
 (defn placeholder [{:keys [children]}]
@@ -71,28 +72,26 @@
     :path "images/history@3x.png"}])
 
 (defn root [{:keys [tabs]}]
-  {:fx/type :tab-pane
-   :pref-width 1024
-   :pref-height 768
-   :side :left
-   :tab-max-height 30
-   :tab-max-width 30
-   :tab-min-height 30
-   :tab-min-width 30
-   :tabs tabs})
-
-(def *signals (atom []))
+  {:fx/type :stage
+   :showing true
+   :title "Rumble"
+   :scene {:fx/type :scene
+           :stylesheets [(::css/url styles/app)]
+           :root {:fx/type :tab-pane
+                  :pref-width 1024
+                  :pref-height 768
+                  :side :left
+                  :tab-max-height 30
+                  :tab-max-width 30
+                  :tab-min-height 30
+                  :tab-min-width 30
+                  :tabs tabs}}})
 
 (defn first-ui-attempt []
   (fx/on-fx-thread
    (fx/create-component
-    {:fx/type :stage
-     :showing true
-     :title "Rumble"
-     :scene {:fx/type :scene
-             :stylesheets [(::css/url styles/app)]
-             :root {:fx/type root
-                    :tabs app-tabs}}})))
+    {:fx/type root
+     :tabs app-tabs})))
 
 ;; (setImplicitExit true) results in the jvm shutting down when the app window
 ;; is closed; might be a short-term solution until the app takes on more shape
@@ -103,7 +102,8 @@
     (javafx.application.Platform/setImplicitExit true))
   (thread
     (kludge/login!)
-    (status-go/set-signal-event-callback! (fn [s] (swap! *signals #(conj % s)))))
+    (status-go/set-signal-event-callback!
+     (fn [s] (swap! state/*signals #(conj % s)))))
   (first-ui-attempt)
   nil)
 
