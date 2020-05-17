@@ -1,9 +1,9 @@
 (ns rumble.status-go
   (:import [rumble.native.status-go.signal SignalEventCallback])
-  (:require [clojure.core.async :as async]
+  (:require [clojure.core.async :as async :refer [thread]]
             [clojure.data.json :as json]
             [rumble.native.status-go :as native]
-            [rumble.util :as util :refer [def-asyncified-fn]]))
+            [rumble.util :as util :refer [asyncify def-asyncified-fn]]))
 
 (defn add-peer [enode]
   (json/read-str
@@ -65,11 +65,12 @@
 (def ^:private signal-event-callback (atom nil))
 
 (defn set-signal-event-callback! [^clojure.lang.IFn f]
-  (let [f* #(f (json/read-str %))]
+  (let [f* #(f (json/read-str %))
+        f** (asyncify f* 1 0)]
     (if-let [callback @signal-event-callback]
-      (do (reset! (.-state callback) f*)
+      (do (reset! (.-state callback) f**)
           nil)
-      (let [callback (SignalEventCallback. f*)]
+      (let [callback (SignalEventCallback. f**)]
         (reset! signal-event-callback callback)
         (.SetSignalEventCallback native/+StatusGo+ callback)
         nil))))
