@@ -28,7 +28,7 @@
 
 (defn chats [{:keys [topics messages]}]
   {:fx/type :split-pane
-   :divider-positions [0.25]
+   :divider-positions [0.34]
    :items [{:fx/type topics
             :children []}
            {:fx/type messages
@@ -78,8 +78,8 @@
    :scene {:fx/type :scene
            :stylesheets [(::css/url styles/app)]
            :root {:fx/type :tab-pane
-                  :pref-width 1024
-                  :pref-height 768
+                  :pref-width 1232
+                  :pref-height 770
                   :side :left
                   :tab-max-height 30
                   :tab-max-width 30

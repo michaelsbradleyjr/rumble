@@ -29,7 +29,7 @@ public class Splash extends Application {
             CornerRadii.EMPTY,
             Insets.EMPTY);
         BackgroundImage image = new BackgroundImage(
-            new Image("/images/rumble.png", 171, 132, false, true, false),
+            new Image("/images/rumble.png", 240, 240, false, false, false),
             BackgroundRepeat.NO_REPEAT,
             BackgroundRepeat.NO_REPEAT,
             BackgroundPosition.CENTER,
@@ -37,12 +37,11 @@ public class Splash extends Application {
         pane.setBackground(new Background(
                                new BackgroundFill[]{fill},
                                new BackgroundImage[]{image}));
-        Scene scene = new Scene(pane, 1024, 768, Color.WHITE);
+        Scene scene = new Scene(pane, 720, 480, Color.WHITE);
         stage.setScene(scene);
         stage.alwaysOnTopProperty();
-        stage.initStyle(StageStyle.UNDECORATED);
+        stage.initStyle(StageStyle.TRANSPARENT);
         stage.show();
-
         new Thread(() -> {
                 Clojure
                     .var("clojure.core", "require")
