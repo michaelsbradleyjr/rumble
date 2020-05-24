@@ -48,6 +48,10 @@
    :closable false
    :content content})
 
+;; (defn dapp-browser [{:keys [url]}]
+;;   {:fx/type :web-view
+;;    :url url})
+
 (def app-tabs
   [{:fx/type app-tab
     :content {:fx/type chats
@@ -58,6 +62,10 @@
     :content {:fx/type placeholder
               :children []}
     :path "images/wallet@3x.png"}
+   ;; {:fx/type app-tab
+   ;;  :content {:fx/type dapp-browser
+   ;;            :url "https://teller.exchange"}
+   ;;  :path "images/browser@3x.png"}
    {:fx/type app-tab
     :content {:fx/type placeholder
               :children []}
@@ -101,9 +109,9 @@
   (when (System/getProperty "rumble.fx-implicit-exit")
     (javafx.application.Platform/setImplicitExit true))
   (thread
-    (kludge/login!)
     (status-go/set-signal-event-callback!
-     (fn [s] (swap! state/*signals #(conj % s)))))
+     (fn [s] (swap! state/*signals #(conj % s))))
+    (kludge/login!))
   (first-ui-attempt)
   nil)
 

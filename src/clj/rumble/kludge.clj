@@ -6,60 +6,16 @@
 ;; get status-go up-and-running to an extent it's possible to use RPC
 ;; credit: https://github.com/richard-ramos/status-node/blob/master/index.js
 
-(def data-dir "data")
-
-(def rumble-dir (path-join (System/getProperty "user.home") ".rumble"))
-
-(def no-backup-dir "no-backup")
-
-(def no-backup-dir-abs (path-join rumble-dir no-backup-dir))
-
-(def keystore-dir "keystore")
-
-(def keystore-dir-abs (path-join no-backup-dir-abs keystore-dir))
-
-(util/delete-recursively rumble-dir)
-
-;; doesn't create a "foo" file, only ensures directory tree exists
-(make-parents (path-join keystore-dir-abs "foo"))
-
-(status-go/init-keystore keystore-dir-abs)
-
-(status-go/open-accounts no-backup-dir-abs)
-
 (def account-1
   {:bip39Passphrase ""
    :mnemonicPhraseLength 12
    :n 5
    :paths ["m/43'/60'/1581'/0'/0" "m/44'/60'/0'/0/0"]})
 
-(def derived-addresses
-  (status-go/multi-account-generate-and-derive-addresses account-1))
-
-(def account-1-id ((first derived-addresses) "id"))
-
 ;; "qwerty" hashed with keccak-256
 (def password "0x2cd9bf92c5e20b1b410f5ace94d963a96e89156fbe65b70365e8596b37f1f165")
 
-(def account-2
-  {:accountID account-1-id
-   :password password
-   :paths ["m/44'/60'/0'/0"
-           "m/43'/60'/1581'"
-           "m/43'/60'/1581'/0'/0"
-           "m/44'/60'/0'/0/0"]})
-
-(def derived-accounts
-  (status-go/multi-account-store-derived-accounts account-2))
-
 (def photo-path "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAmElEQVR4nOzX4QmAIBBA4Yp2aY52aox2ao6mqf+SoajwON73M0J4HBy6TEEYQmMIjSE0htCECVlbDziv+/n6fuzb3OP/UmEmYgiNITRNm+LPqO2UE2YihtAYQlN818ptoZzau1btOakwEzGExhCa5hdi7d2p1zZLhZmIITSG0PhCpDGExhANEmYihtAYQmMIjSE0bwAAAP//kHQdRIWYzToAAAAASUVORK5CYII=")
-
-(def multi-account-data
-  {:name "Delectable Overjoyed Nauplius"
-   :address ((first derived-addresses) "address")
-   :photo-path photo-path
-   :key-uid ((first derived-addresses) "keyUid")
-   :keycard-pairing nil})
 
 (def networks
   [{:id "testnet_rpc"
@@ -103,42 +59,6 @@
              :UpstreamConfig {:Enabled true
                               :URL "https://core.poa.network"}}}])
 
-(def settings
-  {:key-uid ((first derived-addresses) "keyUid")
-   :mnemonic ((first derived-addresses) "mnemonic")
-   :public-key ((derived-accounts "m/43'/60'/1581'/0'/0") "publicKey")
-   :name (multi-account-data :name)
-   :address  ((first derived-addresses) "address")
-   :eip1581-address ((derived-accounts "m/43'/60'/1581'") "address")
-   :dapps-address ((derived-accounts "m/44'/60'/0'/0/0") "address")
-   :wallet-root-address ((derived-accounts "m/44'/60'/0'/0") "address")
-   :preview-privacy? true
-   :signing-phrase "dust gear boss"
-   :log-level "INFO"
-   :latest-derived-path 0
-   "networks/networks" networks
-   :currency "usd"
-   :photo-path photo-path
-   :waku-enabled true
-   "wallet/visible-tokens" {:mainnet ["SNT"]}
-   :appearance 0
-   "networks/current-network" "mainnet_rpc"
-   :installation-id "5d6bc316-a97e-5b89-9541-ad01f8eb7397"})
-
-(def accounts-data
-  [{:public-key ((derived-accounts "m/44'/60'/0'/0/0") "publicKey")
-    :address ((derived-accounts "m/44'/60'/0'/0/0") "address")
-    :color "#4360df"
-    :wallet true
-    :path "m/44'/60'/0'/0/0"
-    :name "Status account"}
-   {:public-key ((derived-accounts "m/43'/60'/1581'/0'/0") "publicKey")
-    :address ((derived-accounts "m/43'/60'/1581'/0'/0") "address")
-    :name "Delectable Overjoyed Nauplius"
-    :photo-path photo-path
-    :path "m/43'/60'/1581'/0'/0"
-    :chat true}])
-
 (def boot-nodes
   ["enode://23d0740b11919358625d79d4cac7d50a34d79e9c69e16831c5c70573757a1f5d7d884510bc595d7ee4da3c1508adf87bbc9e9260d804ef03f8c1e37f2fb2fc69@47.52.106.107:443"
    "enode://5395aab7833f1ecb671b59bf0521cf20224fe8162fc3d2675de4ee4d5636a75ec32d13268fc184df8d1ddfa803943906882da62a4df42d4fccf6d17808156a87@178.128.140.188:443"
@@ -162,53 +82,113 @@
    "enode://c42f368a23fa98ee546fd247220759062323249ef657d26d357a777443aec04db1b29a3a22ef3e7c548e18493ddaf51a31b0aed6079bd6ebe5ae838fcfaf3a49@178.128.142.54:443"
    "enode://30211cbd81c25f07b03a0196d56e6ce4604bb13db773ff1c0ea2253547fafd6c06eae6ad3533e2ba39d59564cfbdbb5e2ce7c137a5ebb85e99dcfc7a75f99f55@23.236.58.92:443"])
 
-(def final-config
-  {:BrowsersConfig {:Enabled true}
-   :ClusterConfig {:BootNodes boot-nodes
-                   :Enabled true
-                   :Fleet "eth.prod"
-                   :RendezvousNodes rendezvous-nodes
-                   :StaticNodes static-nodes
-                   :TrustedMailServers trusted-mail-servers}
-   :DataDir data-dir
-   :EnableNTPSync true
-   :KeyStoreDir keystore-dir
-   :ListenAddr ":30305"
-   :LogEnabled true
-   :LogFile "geth.log"
-   :LogLevel "INFO"
-   :MailserversConfig {:Enabled true}
-   :Name "StatusIM"
-   :NetworkId 1
-   :NoDiscovery false
-   :PermissionsConfig {:Enabled true}
-   :Rendezvous true
-   :RequireTopics {:whisper {:Max 2 :Min 2}}
-   :ShhextConfig {:BackupDisabledDataDir "./"
-                  :DataSyncEnabled true
-                  :InstallationID "aef27732-8d86-5039-a32e-bdbe094d8791"
-                  :MailServerConfirmations true
-                  :MaxMessageDeliveryAttempts 6
-                  :PFSEnabled true
-                  :VerifyENSContractAddress "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
-                  :VerifyENSURL "https://mainnet.infura.io/v3/f315575765b14720b32382a61a89341a"
-                  :VerifyTransactionChainID 1
-                  :VerifyTransactionURL "https://mainnet.infura.io/v3/f315575765b14720b32382a61a89341a"}
-   :StatusAccountsConfig {:Enabled true}
-   :UpstreamConfig {:Enabled true
-                    :URL "https://mainnet.infura.io/v3/f315575765b14720b32382a61a89341a"}
-   :WakuConfig {:BloomFilterMode nil
-                :Enabled true
-                :LightClient true
-                :MinimumPoW 0.001}
-   :WalletConfig {:Enabled true}})
-
 (defn login! []
-  (status-go/save-account-and-login multi-account-data
-                                    password
-                                    settings
-                                    final-config
-                                    accounts-data))
+  (let [data-dir "data"
+        rumble-dir (path-join (System/getProperty "user.home") ".rumble")
+        no-backup-dir "no-backup"
+        no-backup-dir-abs (path-join rumble-dir no-backup-dir)
+        keystore-dir "keystore"
+        keystore-dir-abs (path-join no-backup-dir-abs keystore-dir)]
+    (util/delete-recursively rumble-dir)
+    ;; make-parents doesn't create a "foo" file, only ensures directories exist
+    (make-parents (path-join keystore-dir-abs "foo"))
+    (status-go/init-keystore keystore-dir-abs)
+    (status-go/open-accounts no-backup-dir-abs)
+    (let [derived-addresses
+          (status-go/multi-account-generate-and-derive-addresses account-1)
+          account-1-id ((first derived-addresses) "id")
+          account-2 {:accountID account-1-id
+                     :password password
+                     :paths ["m/44'/60'/0'/0"
+                             "m/43'/60'/1581'"
+                             "m/43'/60'/1581'/0'/0"
+                             "m/44'/60'/0'/0/0"]}
+          derived-accounts
+          (status-go/multi-account-store-derived-accounts account-2)
+          multi-account-data {:name "Delectable Overjoyed Nauplius"
+                              :address ((first derived-addresses) "address")
+                              :photo-path photo-path
+                              :key-uid ((first derived-addresses) "keyUid")
+                              :keycard-pairing nil}
+          settings
+          {:key-uid ((first derived-addresses) "keyUid")
+           :mnemonic ((first derived-addresses) "mnemonic")
+           :public-key ((derived-accounts "m/43'/60'/1581'/0'/0") "publicKey")
+           :name (multi-account-data :name)
+           :address  ((first derived-addresses) "address")
+           :eip1581-address ((derived-accounts "m/43'/60'/1581'") "address")
+           :dapps-address ((derived-accounts "m/44'/60'/0'/0/0") "address")
+           :wallet-root-address ((derived-accounts "m/44'/60'/0'/0") "address")
+           :preview-privacy? true
+           :signing-phrase "dust gear boss"
+           :log-level "INFO"
+           :latest-derived-path 0
+           "networks/networks" networks
+           :currency "usd"
+           :photo-path photo-path
+           :waku-enabled true
+           "wallet/visible-tokens" {:mainnet ["SNT"]}
+           :appearance 0
+           "networks/current-network" "mainnet_rpc"
+           :installation-id "5d6bc316-a97e-5b89-9541-ad01f8eb7397"}
+          accounts-data
+          [{:public-key ((derived-accounts "m/44'/60'/0'/0/0") "publicKey")
+            :address ((derived-accounts "m/44'/60'/0'/0/0") "address")
+            :color "#4360df"
+            :wallet true
+            :path "m/44'/60'/0'/0/0"
+            :name "Status account"}
+           {:public-key ((derived-accounts "m/43'/60'/1581'/0'/0") "publicKey")
+            :address ((derived-accounts "m/43'/60'/1581'/0'/0") "address")
+            :name "Delectable Overjoyed Nauplius"
+            :photo-path photo-path
+            :path "m/43'/60'/1581'/0'/0"
+            :chat true}]
+          final-config
+          {:BrowsersConfig {:Enabled true}
+           :ClusterConfig {:BootNodes boot-nodes
+                           :Enabled true
+                           :Fleet "eth.prod"
+                           :RendezvousNodes rendezvous-nodes
+                           :StaticNodes static-nodes
+                           :TrustedMailServers trusted-mail-servers}
+           :DataDir data-dir
+           :EnableNTPSync true
+           :KeyStoreDir keystore-dir
+           :ListenAddr ":30305"
+           :LogEnabled true
+           :LogFile "geth.log"
+           :LogLevel "INFO"
+           :MailserversConfig {:Enabled true}
+           :Name "StatusIM"
+           :NetworkId 1
+           :NoDiscovery false
+           :PermissionsConfig {:Enabled true}
+           :Rendezvous true
+           :RequireTopics {:whisper {:Max 2 :Min 2}}
+           :ShhextConfig {:BackupDisabledDataDir "./"
+                          :DataSyncEnabled true
+                          :InstallationID "aef27732-8d86-5039-a32e-bdbe094d8791"
+                          :MailServerConfirmations true
+                          :MaxMessageDeliveryAttempts 6
+                          :PFSEnabled true
+                          :VerifyENSContractAddress "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+                          :VerifyENSURL "https://mainnet.infura.io/v3/f315575765b14720b32382a61a89341a"
+                          :VerifyTransactionChainID 1
+                          :VerifyTransactionURL "https://mainnet.infura.io/v3/f315575765b14720b32382a61a89341a"}
+           :StatusAccountsConfig {:Enabled true}
+           :UpstreamConfig {:Enabled true
+                            :URL "https://mainnet.infura.io/v3/f315575765b14720b32382a61a89341a"}
+           :WakuConfig {:BloomFilterMode nil
+                        :Enabled true
+                        :LightClient true
+                        :MinimumPoW 0.001}
+           :WalletConfig {:Enabled true}}]
+      (status-go/save-account-and-login multi-account-data
+                                        password
+                                        settings
+                                        final-config
+                                        accounts-data))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

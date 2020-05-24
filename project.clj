@@ -3,7 +3,7 @@
   :url "https://github.com/michaelsbradleyjr/rumble"
   :license {:name "Mozilla Public License v2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :dependencies [[cljfx "1.7.2"]
+  :dependencies [[cljfx "1.7.3"]
                  [cljfx/css "1.1.0"]
                  [net.java.dev.jna/jna "5.5.0"]
                  [org.clojure/core.async "1.1.587"]

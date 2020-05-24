@@ -17,5 +17,5 @@
   [SetSignalEventCallback [com.sun.jna.Callback] Void]])
 
 (defonce +StatusGo+
-  (Native/loadLibrary (.toString (Native/extractFromResourcePath "status"))
-                      jna.StatusGo))
+  (Native/load (.toString (Native/extractFromResourcePath "status"))
+               jna.StatusGo))
