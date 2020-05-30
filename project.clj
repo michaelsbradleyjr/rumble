@@ -37,12 +37,15 @@
             "pkg:linux"
             ["do"
              ["prep"]
-             ["shell" "jpackage" "--app-version" "${:version}" "@jpackage/common" "@jpackage/linux"]]
+             ["shell" "jpackage" "--app-version" "${:version}"
+              "@jpackage/common" "@jpackage/linux"]]
             "pkg:macos"
             ["do"
              ["prep"]
-             ["shell" "jpackage" "--app-version" "${:version}" "@jpackage/common" "@jpackage/macos"]]
+             ["shell" "jpackage" "--app-version" "${:version}"
+              "@jpackage/common" "@jpackage/macos"]]
             "pkg:windows"
             ["do"
              ["prep"]
-             ["shell" "jpackage" "--app-version" "${:version-windows}" "@jpackage/common" "@jpackage/windows"]]})
+             ["shell" "jpackage" "--app-version" "${:version-windows}"
+              "@jpackage/common" "@jpackage/windows"]]})

@@ -1,0 +1,162 @@
+on:
+  release:
+    types:
+      - created
+
+name: Build and Upload Release Artifacts
+
+jobs:
+  pkg-linux:
+    name: Build and upload Linux release artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Go and build status-go shared library
+        run: |
+            mkdir -p "${HOME}/repos"
+            cp status-go.targets "${HOME}/repos/"
+            mkdir -p "${HOME}/Downloads"
+            cd "${HOME}/Downloads"
+            wget -q https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz
+            tar xzf go1.14.3.linux-amd64.tar.gz
+            export PATH="${HOME}/Downloads/go/bin:${PATH}"
+            cd "${HOME}/repos"
+            git clone --depth 1 https://github.com/status-im/status-go.git
+            cd status-go
+            cat ../status-go.targets >> Makefile
+            make statusgo-library-shared-linux
+      - name: Install OpenJDK and Leiningen
+        run: |
+            wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | sudo apt-key add -
+            sudo add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/
+            sudo apt-get update
+            sudo apt-get install adoptopenjdk-14-openj9
+            mkdir -p "${HOME}/.local/bin"
+            cd "${HOME}/.local/bin"
+            wget -q https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
+            chmod +x lein
+      - name: Build and package application
+        id: pkg
+        run: |
+            export JAVA_HOME=/usr/lib/jvm/adoptopenjdk-14-openj9-amd64
+            export PATH="${JAVA_HOME}/bin:${HOME}/.local/bin:${PATH}"
+            cp "${HOME}/repos/status-go/build/bin/libstatus.so" resources/linux-x86-64/
+            rm -rf resources/darwin resources/linux-x86-64/.gitkeep resources/win32-x86-64
+            lein pkg:linux
+            DEB_PATH=$(ls pkg/rumble*)
+            DEB_NAME=$(basename "${DEB_PATH}")
+            echo "::set-output name=deb_path::${DEB_PATH}"
+            echo "::set-output name=deb_name::${DEB_NAME}"
+      - name: Upload release artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.pkg.outputs.deb_path }}
+          asset_name: ${{ steps.pkg.outputs.deb_name }}
+          asset_content_type: application/vnd.debian.binary-package
+  pkg-macos:
+    name: Build and upload macOS release artifacts
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Go and build status-go shared library
+        run: |
+            mkdir -p "${HOME}/repos"
+            cp status-go.targets "${HOME}/repos/"
+            brew install go
+            cd "${HOME}/repos"
+            git clone --depth 1 https://github.com/status-im/status-go.git
+            cd status-go
+            cat ../status-go.targets >> Makefile
+            make statusgo-library-shared-macos
+      - name: Install OpenJDK and Leiningen
+        run: |
+            brew tap AdoptOpenJDK/openjdk
+            brew cask install adoptopenjdk14-openj9
+            brew install leiningen
+      - name: Build and package application
+        id: pkg
+        run: |
+            export JAVA_HOME="$(/usr/libexec/java_home -v 14)"
+            export PATH="${JAVA_HOME}/bin:${PATH}"
+            cp "${HOME}/repos/status-go/build/bin/libstatus.dylib" resources/darwin/
+            rm -rf resources/darwin/.gitkeep resources/linux-x86-64 resources/win32-x86-64
+            lein pkg:macos
+            DMG_PATH=$(ls pkg/Rumble*)
+            DMG_NAME=$(basename "${DMG_PATH}")
+            echo "::set-output name=dmg_path::${DMG_PATH}"
+            echo "::set-output name=dmg_name::${DMG_NAME}"
+      - name: Upload release artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.pkg.outputs.dmg_path }}
+          asset_name: ${{ steps.pkg.outputs.dmg_name }}
+          asset_content_type: application/x-apple-diskimage
+  pkg-windows:
+    name: Build and upload Windows release artifacts
+    runs-on: windows-2016
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Scoop
+        shell: powershell
+        run: |
+            iwr -useb get.scoop.sh | iex
+      - name: Install Go and GCC and build status-go shared library
+        # env:
+        #   GIT_REDIRECT_STDERR: "2>&1"
+        shell: powershell
+        run: |
+            $env:PATH="$($env:USERPROFILE)\scoop\shims;$($env:PATH)"
+            mkdir "$($env:USERPROFILE)\repos" -ea 0
+            cp status-go.targets "$($env:USERPROFILE)\repos\"
+            scoop install go
+            scoop install gcc
+            cd "$($env:USERPROFILE)\repos"
+            git clone --depth 1 https://github.com/status-im/status-go.git
+            cd status-go
+            cat ..\status-go.targets | ac Makefile
+            make statusgo-library-shared-windows
+      - name: Install OpenJDK, WiX, Wget, and Leiningen
+        shell: powershell
+        run: |
+            $env:PATH="$($env:USERPROFILE)\scoop\shims;$($env:PATH)"
+            scoop bucket add java
+            scoop install adopt14-openj9
+            scoop install wixtoolset
+            scoop install wget
+            mkdir "$($env:USERPROFILE)\Downloads\leiningen" -ea 0
+            cd "$($env:USERPROFILE)\Downloads\leiningen"
+            wget.ps1 -q https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein.ps1
+      - name: Build and package application
+        id: pkg
+        shell: powershell
+        run: |
+            $env:JAVA_HOME="$($env:USERPROFILE)\scoop\apps\adopt14-openj9\current"
+            $env:PATH="$($env:USERPROFILE)\Downloads\leiningen;$($env:JAVA_HOME)\bin;$($env:USERPROFILE)\scoop\shims;$($env:PATH)"
+            cp "$($env:USERPROFILE)\repos\status-go\build\bin\status.dll" .\resources\win32-x86-64\
+            rm -force -recurse .\resources\darwin
+            rm -force -recurse .\resources\linux-x86-64
+            rm .\resources\win32-x86-64\.gitkeep
+            lein self-install
+            lein pkg:windows
+            $env:EXE_PATH=$(gci .\pkg\Rumble* | select -f 1)
+            $env:EXE_NAME=$(Split-Path -Leaf $env:EXE_PATH)
+            echo "::set-output name=exe_path::$($env:EXE_PATH)"
+            echo "::set-output name=exe_name::$($env:EXE_NAME)"
+      - name: Upload release artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.pkg.outputs.exe_path }}
+          asset_name: ${{ steps.pkg.outputs.exe_name }}
+          asset_content_type: application/vnd.microsoft.portable-executable

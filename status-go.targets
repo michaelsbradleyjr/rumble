@@ -1,22 +1,28 @@
 
 statusgo-library-shared-macos: ##@cross-compile Build status-go as shared library for macOS
+	mkdir -p $(GOBIN)/statusgo-lib
+	go run cmd/library/* > $(GOBIN)/statusgo-lib/main.go
 	@echo "Building shared library for macOS..."
-	CGO_CFLAGS=-mmacosx-version-min=10.12 CGO_LDFLAGS=-mmacosx-version-min=10.12 go build -buildmode=c-shared -o $(GOBIN)/libstatus.dylib $(BUILD_FLAGS) ./lib
+	CGO_CFLAGS=-mmacosx-version-min=10.12 CGO_LDFLAGS=-mmacosx-version-min=10.12 go build -buildmode=c-shared -o $(GOBIN)/libstatus.dylib $(BUILD_FLAGS) $(GOBIN)/statusgo-lib
 	@echo "Shared library built:"
 	@ls -la $(GOBIN)/libstatus.*
 
 
 # not clear yet if flags are needed re: min version of Windows the build should support
 statusgo-library-shared-windows: ##@cross-compile Build status-go as shared library for Microsoft Windows
+	mkdir -p $(GOBIN)/statusgo-lib
+	go run cmd/library/* > $(GOBIN)/statusgo-lib/main.go
 	@echo "Building shared library for Microsoft Windows..."
-	CGO_LDFLAGS="-Wl,--export-all-symbols" go build -buildmode=c-shared -o $(GOBIN)/status.dll $(BUILD_FLAGS) ./lib
+	CGO_LDFLAGS="-Wl,--export-all-symbols" go build -buildmode=c-shared -o $(GOBIN)/status.dll $(BUILD_FLAGS) $(GOBIN)/statusgo-lib
 	@echo "Shared library built:"
 	@ls -la $(GOBIN)/status.*
 
 
 # not clear yet if flags are needed re: min version of Linux the build should support
 statusgo-library-shared-linux: ##@cross-compile Build status-go as shared library for Linux
+	mkdir -p $(GOBIN)/statusgo-lib
+	go run cmd/library/* > $(GOBIN)/statusgo-lib/main.go
 	@echo "Building shared library for Linux..."
-	go build -buildmode=c-shared -o $(GOBIN)/libstatus.so $(BUILD_FLAGS) ./lib
+	go build -buildmode=c-shared -o $(GOBIN)/libstatus.so $(BUILD_FLAGS) $(GOBIN)/statusgo-lib
 	@echo "Shared library built:"
 	@ls -la $(GOBIN)/libstatus.*
