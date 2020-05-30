@@ -1,0 +1,46 @@
+on:
+  release:
+    types: [created]
+
+name: Build and Upload Release Artifacts
+
+jobs:
+  pkg-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+      - uses: actions/checkout@v1
+      - name: Package the macOS application
+      - id: pkg
+      - run: |
+            brew install go
+            mkdir -p "${HOME}/repos"
+            cp status-go.targets "${HOME}/repos/"
+            pushd "${PWD}" &>/dev/null
+            cd "${HOME}/repos"
+            git clone https://github.com/status-im/status-go.git
+            cd status-go
+            cat ../status-go.targets >> Makefile
+            make statusgo-library-shared-macos
+            popd &>/dev/null
+            brew tap AdoptOpenJDK/openjdk
+            brew install adoptopenjdk14-openj9
+            export JAVA_HOME="$(/usr/libexec/java_home -v 14)"
+            export PATH="${JAVA_HOME}/bin:${PATH}"
+            brew install lein
+            cp "${HOME}/repos/status-go/build/bin/libstatus.dylib" resources/darwin/
+            rm -rf resources/darwin/.gitkeep resources/linux-x86-64 resources/win32-x86-64
+            lein pkg:macos
+            DMG_PATH=$(ls pkg/Rumble*)
+            DMG_NAME=$(basename "${DMG_PATH}")
+            echo "::set-output name=dmg_path::${DMG_PATH}"
+            echo "::set-output name=dmg_name::${DMG_NAME}"
+      - name: Upload macOS release artifact
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.UPLOAD_RELEASE_ARTIFACTS_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.pkg.outputs.dmg_path }}
+          asset_name: ${{ steps.pkg.outputs.dmg_name }}
+          asset_content_type: application/x-apple-diskimage

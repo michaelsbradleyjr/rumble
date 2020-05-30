@@ -1,8 +1,9 @@
-(defproject rumble "0.1.0-SNAPSHOT"
+(defproject rumble "0.0.1-alpha.0"
   :description "Experimental desktop app built atop status-go"
   :url "https://github.com/michaelsbradleyjr/rumble"
   :license {:name "Mozilla Public License v2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
+  :version-windows "0.0.1"
   :dependencies [[cljfx "1.7.3"]
                  [cljfx/css "1.1.0"]
                  [net.java.dev.jna/jna "5.5.0"]
@@ -44,4 +45,4 @@
             "pkg:windows"
             ["do"
              ["prep"]
-             ["shell" "jpackage" "--app-version" "${:version}" "@jpackage/common" "@jpackage/windows"]]})
+             ["shell" "jpackage" "--app-version" "${:version-windows}" "@jpackage/common" "@jpackage/windows"]]})
